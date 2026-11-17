@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block titulo %}{{ info.nombre }}{% endblock %}
+{% block contenido %}
+<h1>Reporte {{ info.nombre }}</h1>
+<form method="get" class="tarjeta">
+  <input type="hidden" name="generar" value="1">
+  <div style="display:flex;gap:14px;flex-wrap:wrap">
+    <div class="campo"><label>Orden de los nombres</label>
+      <select name="orden">
+        <option value="asc">Ascendente (A-Z)</option>
+        <option value="desc" {% if args.get('orden') == 'desc' %}selected{% endif %}>Descendente (Z-A)</option>
+      </select></div>
+
+    {% if clave == 'personal' %}
+    <div class="campo"><label>Empleado</label>
+      <select name="empleado">
+        <option value="todos">Todos los empleados</option>
+        {% for e in empleados %}<option value="{{ e.Codigo }}" {% if args.get('empleado') == e.Codigo|string %}selected{% endif %}>{{ e.Nombre }} ({{ e.Codigo }})</option>{% endfor %}
+      </select></div>
+    {% endif %}
+
+    {% if clave == 'novedades' %}
+    <div class="campo"><label>Desde (F1, MM/AAAA)</label><input type="month" name="f1" value="{{ args.get('f1', '2022-01') }}"></div>
+    <div class="campo"><label>Hasta (F2, MM/AAAA)</label><input type="month" name="f2" value="{{ args.get('f2', '2022-12') }}"></div>
+    {% endif %}
+  </div>
+
+  {% if clave == 'entretenimiento' %}
+  <div class="campo"><label>Secciones a incluir (si no marca ninguna se incluyen todas)</label>
+    <div class="checks">
+      {% for s, txt in secciones_ent.items() %}
+        <label><input type="checkbox" name="sec_{{ s }}" value="1" {% if args.get('sec_' ~ s) %}checked{% endif %}> {{ txt }}</label>
+      {% endfor %}
+    </div></div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap">
+    <div class="campo"><label>a. Género</label>
+      <select name="genero"><option value="todos">Todos</option>
+        {% for g in generos %}<option value="{{ g.ID_Genero }}" {% if args.get('genero') == g.ID_Genero|string %}selected{% endif %}>{{ g.Nombre }}</option>{% endfor %}
+      </select></div>
+    <div class="campo"><label>a. Año desde (F1)</label><input type="number" name="peli_desde" value="{{ args.get('peli_desde', 1995) }}"></div>
+    <div class="campo"><label>a. Año hasta (F2)</label><input type="number" name="peli_hasta" value="{{ args.get('peli_hasta', 1995) }}"></div>
+    <div class="campo"><label>b. Top N libros</label><input type="number" name="top_n" min="1" max="1000" value="{{ args.get('top_n', 10) }}"></div>
+    <div class="campo"><label>b. Mínimo de ratings (opcional)</label><input type="number" name="min_ratings" min="0" value="{{ args.get('min_ratings', 0) }}"></div>
+    <div class="campo"><label>c. Año desde</label><input type="number" name="top5_desde" value="{{ args.get('top5_desde', 2000) }}"></div>
+    <div class="campo"><label>c. Año hasta</label><input type="number" name="top5_hasta" value="{{ args.get('top5_hasta', 2005) }}"></div>
+    <div class="campo"><label>d. N géneros</label><input type="number" name="n_generos" min="0" max="20" value="{{ args.get('n_generos', 3) }}"></div>
+    <div class="campo"><label>f. Año desde (F1)</label><input type="number" name="libros_desde" value="{{ args.get('libros_desde', 1990) }}"></div>
+    <div class="campo"><label>f. Año hasta (F2)</label><input type="number" name="libros_hasta" value="{{ args.get('libros_hasta', 2010) }}"></div>
+  </div>
+  {% endif %}
+  <button class="btn">Generar reporte</button>
+</form>
+
+{% if reporte %}
+{% set url_pdf = url_for('reporte_pdf', clave=clave) ~ '?' ~ request.query_string.decode() %}
+<div class="tarjeta">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <div class="pestanas">
+      <button type="button" class="activa" data-p="pantalla">Vista en pantalla</button>
+      <button type="button" data-p="pdf">Vista previa PDF</button>
+    </div>
+    <div>
+      <button type="button" class="btn sec" onclick="imprimir()">Imprimir</button>
+      <a class="btn" href="{{ url_pdf }}" target="_blank">Abrir PDF</a>
+    </div>
+  </div>
+  <div id="p-pantalla" class="reporte">
+    {% if reporte.parametros %}<p class="nota">{{ reporte.parametros }}</p>{% endif %}
+    {% for s in reporte.secciones %}
+      {% if s.tipo == 'titulo' %}<h2>{{ s.texto }}</h2>
+      {% elif s.tipo == 'texto' %}<p>{{ s.texto }}</p>
+      {% elif s.tipo == 'grafico' %}<img class="grafico" src="data:image/png;base64,{{ s.b64 }}" alt="gráfico">
+      {% elif s.tipo == 'tabla' %}
+        {% if s.titulo %}<div class="subtabla">{{ s.titulo }}</div>{% endif %}
+        <div class="tabla-scroll"><table class="datos">
+          <tr>{% for c in s.columnas %}<th>{{ c }}</th>{% endfor %}</tr>
+          {% for fila in s.filas[:limite_html] %}<tr>{% for v in fila %}<td>{{ v|valor }}</td>{% endfor %}</tr>
+          {% else %}<tr><td colspan="{{ s.columnas|length }}">Sin registros.</td></tr>{% endfor %}
+        </table></div>
+        {% if s.filas|length > limite_html %}<p class="nota">Se muestran {{ limite_html }} de {{ s.filas|length }} filas. El PDF tiene la lista completa.</p>{% endif %}
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div id="p-pdf" class="vista-pdf" style="display:none">
+    <iframe id="marco-pdf" data-src="{{ url_pdf }}" title="Vista previa PDF"></iframe>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('.pestanas button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.pestanas button').forEach(x => x.classList.remove('activa'));
+  b.classList.add('activa');
+  document.getElementById('p-pantalla').style.display = b.dataset.p === 'pantalla' ? '' : 'none';
+  document.getElementById('p-pdf').style.display = b.dataset.p === 'pdf' ? '' : 'none';
+  const marco = document.getElementById('marco-pdf');
+  if (b.dataset.p === 'pdf' && !marco.src) marco.src = marco.dataset.src;
+}));
+function imprimir() {
+  const marco = document.getElementById('marco-pdf');
+  if (!marco.src) marco.src = marco.dataset.src;
+  document.querySelector('[data-p=pdf]').click();
+  setTimeout(() => { try { marco.contentWindow.focus(); marco.contentWindow.print(); }
+                     catch (e) { window.open(marco.dataset.src, '_blank'); } }, 1200);
+}
+</script>
+{% endblock %}

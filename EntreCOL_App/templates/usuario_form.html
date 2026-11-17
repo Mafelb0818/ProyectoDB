@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Usuario{% endblock %}
+{% block contenido %}
+<h1>{{ 'Editar' if id_usuario else 'Nuevo' }} usuario</h1>
+<form method="post" class="tarjeta formulario" autocomplete="off">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <div class="campo"><label>Usuario (login) *</label><input type="text" name="username" value="{{ u.get('Username', '') }}" required></div>
+  <div class="campo"><label>Nombre completo *</label><input type="text" name="nombre" value="{{ u.get('Nombre', '') }}" required></div>
+  <div class="campo"><label>Email *</label><input type="email" name="email" value="{{ u.get('Email', '') }}" required></div>
+  <div class="campo"><label>Rol *</label>
+    <select name="rol">{% for r in roles %}<option value="{{ r.ID_Rol }}" {% if u.get('ID_Rol') == r.ID_Rol %}selected{% endif %}>{{ r.Nombre }} - {{ r.Descripcion }}</option>{% endfor %}</select></div>
+  <div class="campo"><label>Contraseña {{ '(dejar vacía para no cambiarla)' if id_usuario else '*' }}</label>
+    <input type="password" name="contrasena" {% if not id_usuario %}required{% endif %}>
+    <small>Mínimo 8 caracteres, con mayúscula, minúscula, número y carácter especial. Se guarda cifrada con bcrypt.</small></div>
+  <div class="campo"><label><input type="checkbox" name="activo" value="1" {% if u.get('Activo', 1) %}checked{% endif %} style="min-width:0"> Activo</label></div>
+  <button class="btn">Guardar</button> <a class="btn sec" href="{{ url_for('usuarios') }}">Cancelar</a>
+</form>
+{% endblock %}

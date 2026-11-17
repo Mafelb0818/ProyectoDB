@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}Cambiar contraseña{% endblock %}
+{% block contenido %}
+<h1>Cambiar contraseña</h1>
+<form method="post" class="tarjeta formulario">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <div class="campo"><label>Contraseña actual</label><input type="password" name="actual" required></div>
+  <div class="campo"><label>Nueva contraseña</label><input type="password" name="nueva" required>
+    <small>Mínimo 8 caracteres, con mayúscula, minúscula, número y carácter especial.</small></div>
+  <div class="campo"><label>Repetir nueva contraseña</label><input type="password" name="repetir" required></div>
+  <button class="btn">Guardar</button>
+</form>
+{% endblock %}

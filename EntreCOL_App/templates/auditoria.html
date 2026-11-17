@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoría{% endblock %}
+{% block contenido %}
+<h1>Auditoría de usuarios</h1>
+<div class="tarjeta">
+  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+    <div class="campo"><label>Usuario</label><input type="text" name="usuario" value="{{ args.get('usuario', '') }}"></div>
+    <div class="campo"><label>Acción</label><select name="accion"><option value="">Todas</option>
+      {% for a in acciones %}<option {% if args.get('accion') == a %}selected{% endif %}>{{ a }}</option>{% endfor %}</select></div>
+    <div class="campo"><label>Desde</label><input type="date" name="desde" value="{{ args.get('desde', '') }}"></div>
+    <div class="campo"><label>Hasta</label><input type="date" name="hasta" value="{{ args.get('hasta', '') }}"></div>
+    <div class="campo"><button class="btn sec">Filtrar</button></div>
+    <div class="campo"><a class="btn" target="_blank" href="{{ url_for('auditoria_pdf', **args.to_dict()) }}">Ver en PDF</a></div>
+  </form>
+  <p class="nota">{{ total }} registro(s).</p>
+  <div class="tabla-scroll"><table class="datos">
+    <tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Tabla</th><th>ID registro</th><th>IP</th><th>Detalle</th></tr>
+    {% for a in filas %}
+    <tr><td>{{ a.Fecha_Hora|valor }}</td><td>{{ a.Username or '-' }}</td><td>{{ a.Accion }}</td><td>{{ a.Tabla_Afectada or '' }}</td>
+        <td>{{ a.ID_Registro or '' }}</td><td>{{ a.Direccion_IP }}</td><td style="max-width:420px;word-break:break-word">{{ (a.Detalle or '')[:300] }}</td></tr>
+    {% else %}<tr><td colspan="7">Sin registros.</td></tr>{% endfor %}
+  </table></div>
+  {% set filtros = args.to_dict() %}{% set _ = filtros.pop('pagina', None) %}
+  <div class="paginacion">
+    {% if pagina > 1 %}<a class="btn sec peq" href="{{ url_for('auditoria', pagina=pagina-1, **filtros) }}">&laquo; Anterior</a>{% endif %}
+    Página {{ pagina }} de {{ paginas }}
+    {% if pagina < paginas %}<a class="btn sec peq" href="{{ url_for('auditoria', pagina=pagina+1, **filtros) }}">Siguiente &raquo;</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

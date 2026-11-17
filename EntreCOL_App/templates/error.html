@@ -1,0 +1,5 @@
+{% extends "base.html" if session.get('id_usuario') else "error_simple.html" %}
+{% block contenido %}
+<h1>Error {{ codigo }}</h1>
+<div class="tarjeta"><p>{{ mensaje }}</p><a class="btn sec" href="{{ url_for('inicio') }}">Volver al inicio</a></div>
+{% endblock %}

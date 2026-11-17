@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Detalle de carga{% endblock %}
+{% block contenido %}
+<h1>Carga #{{ c.ID_Carga }}</h1>
+<div class="tarjeta">
+  <table class="datos" style="max-width:600px">
+    <tr><td><b>Archivo</b></td><td>{{ c.Nombre_Archivo }}</td></tr>
+    <tr><td><b>Tipo</b></td><td>{{ c.Tipo_Archivo }}</td></tr>
+    <tr><td><b>Fecha</b></td><td>{{ c.Fecha_Hora|valor }}</td></tr>
+    <tr><td><b>Usuario</b></td><td>{{ c.Username or '-' }}</td></tr>
+    <tr><td><b>Registros cargados</b></td><td class="estado-ok">{{ c.Registros_Cargados }}</td></tr>
+    <tr><td><b>Registros rechazados</b></td><td class="estado-no">{{ c.Registros_Rechazados }}</td></tr>
+  </table>
+  <h3>Observaciones</h3>
+  <pre class="obs">{{ c.Observaciones or 'Sin observaciones.' }}</pre>
+  <a class="btn sec" href="{{ url_for('cargas') }}">Volver</a>
+</div>
+{% endblock %}

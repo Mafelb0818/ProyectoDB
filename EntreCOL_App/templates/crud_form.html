@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titulo %}{{ e.titulo }}{% endblock %}
+{% block contenido %}
+<h1>{{ 'Editar' if editando else 'Nuevo' }} {{ e.singular }}</h1>
+<form method="post" class="tarjeta formulario">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  {% for c in e.campos %}
+    {% set v = registro.get(c.nombre) %}
+    <div class="campo">
+      <label for="{{ c.nombre }}">{{ c.etiqueta }}{% if c.requerido %} *{% endif %}</label>
+      {% if c.tipo == 'fk' %}
+        <select id="{{ c.nombre }}" name="{{ c.nombre }}" {% if c.requerido %}required{% endif %}>
+          <option value="">-- Seleccione --</option>
+          {% for o in opciones[c.nombre] %}
+            <option value="{{ o.id }}" {% if v is not none and v|string == o.id|string %}selected{% endif %}>{{ o.texto }}</option>
+          {% endfor %}
+        </select>
+      {% elif c.tipo == 'multi_genero' %}
+        <select id="{{ c.nombre }}" name="{{ c.nombre }}" multiple>
+          {% for o in opciones['_generos'] %}
+            <option value="{{ o.id }}" {% if o.id in extras.get('generos', []) %}selected{% endif %}>{{ o.texto }}</option>
+          {% endfor %}
+        </select>
+        <small>Use Ctrl + clic para escoger varios.</small>
+      {% elif c.tipo == 'autores' %}
+        <input type="text" id="{{ c.nombre }}" name="{{ c.nombre }}" value="{{ extras.get('autores', '') }}" {% if c.requerido %}required{% endif %}>
+        <small>Ejemplo: J.K. Rowling / Mary GrandPré</small>
+      {% elif c.tipo == 'fecha' %}
+        <input type="date" id="{{ c.nombre }}" name="{{ c.nombre }}" value="{{ v.isoformat() if v and v.isoformat is defined else (v or '') }}" {% if c.requerido %}required{% endif %}>
+      {% elif c.tipo in ('entero', 'decimal') %}
+        <input type="number" id="{{ c.nombre }}" name="{{ c.nombre }}" value="{{ v if v is not none else '' }}"
+               step="{{ '1' if c.tipo == 'entero' else '0.01' }}"
+               {% if c.min is defined %}min="{{ c.min }}"{% endif %} {% if c.max_valor is defined %}max="{{ c.max_valor }}"{% endif %}
+               {% if c.requerido %}required{% endif %}
+               {% if editando and c.nombre == e.llave %}readonly{% endif %}>
+        {% if editando and c.nombre == e.llave %}<small>La llave primaria no se puede cambiar.</small>{% endif %}
+      {% else %}
+        <input type="text" id="{{ c.nombre }}" name="{{ c.nombre }}" value="{{ v or '' }}" maxlength="{{ c.max or 255 }}" {% if c.requerido %}required{% endif %}>
+      {% endif %}
+    </div>
+  {% endfor %}
+  <button class="btn">Guardar</button>
+  <a class="btn sec" href="{{ url_for('crud_lista', clave=clave) }}">Cancelar</a>
+</form>
+{% endblock %}

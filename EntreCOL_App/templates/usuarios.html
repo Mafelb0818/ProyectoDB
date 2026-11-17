@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios{% endblock %}
+{% block contenido %}
+<h1>Usuarios del sistema</h1>
+<div class="tarjeta">
+  <p><a class="btn" href="{{ url_for('usuario_form') }}">+ Nuevo usuario</a></p>
+  <div class="tabla-scroll"><table class="datos">
+    <tr><th>Usuario</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Intentos fallidos</th><th>Creado</th><th>Acciones</th></tr>
+    {% for u in filas %}
+    <tr><td>{{ u.Username }}</td><td>{{ u.Nombre }}</td><td>{{ u.Email }}</td><td>{{ u.Rol }}</td>
+      <td>{% if u.Activo %}<span class="estado-ok">Activo</span>{% elif u.Intentos_Fallidos >= maximo %}<span class="estado-no">Bloqueado</span>{% else %}<span class="estado-no">Inactivo</span>{% endif %}</td>
+      <td>{{ u.Intentos_Fallidos }}</td><td>{{ u.Fecha_Creacion|valor }}</td>
+      <td class="acciones">
+        <a class="btn sec peq" href="{{ url_for('usuario_form', id_usuario=u.ID_Usuario) }}">Editar</a>
+        <form class="en-linea" method="post" action="{{ url_for('usuario_eliminar', id_usuario=u.ID_Usuario) }}" onsubmit="return confirm('¿Eliminar el usuario {{ u.Username }}?');">
+          <input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="btn rojo peq">Eliminar</button></form>
+      </td></tr>
+    {% endfor %}
+  </table></div>
+  <p class="nota">Un usuario queda bloqueado después de {{ maximo }} intentos fallidos. Para desbloquearlo, edítelo y marque "Activo".</p>
+</div>
+{% endblock %}

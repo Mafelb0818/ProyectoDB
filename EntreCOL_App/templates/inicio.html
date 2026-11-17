@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Inicio{% endblock %}
+{% block contenido %}
+<h1>Bienvenido(a), {{ usuario_nombre }}</h1>
+<div class="cifras">
+  <div class="cifra"><div class="num">{{ c.empleados }}</div><div class="lbl">Empleados</div></div>
+  <div class="cifra"><div class="num">{{ c.dependencias }}</div><div class="lbl">Dependencias</div></div>
+  <div class="cifra"><div class="num">{{ c.novedades }}</div><div class="lbl">Novedades de nómina</div></div>
+  <div class="cifra"><div class="num">{{ "{:,}".format(c.peliculas).replace(",", ".") }}</div><div class="lbl">Películas</div></div>
+  <div class="cifra"><div class="num">{{ c.generos }}</div><div class="lbl">Géneros</div></div>
+  <div class="cifra"><div class="num">{{ "{:,}".format(c.libros).replace(",", ".") }}</div><div class="lbl">Libros</div></div>
+  <div class="cifra"><div class="num">{{ "{:,}".format(c.autores).replace(",", ".") }}</div><div class="lbl">Autores</div></div>
+  <div class="cifra"><div class="num">{{ c.usuarios }}</div><div class="lbl">Usuarios del sistema</div></div>
+</div>
+<div class="tarjeta">
+  <h2 style="margin-top:0">Reportes</h2>
+  <div class="rejilla-reportes">
+    {% for clave, r in reportes.items() %}
+      <a href="{{ url_for('reporte_ver', clave=clave) }}"><b>{{ r.nombre }}</b>{{ r.descripcion }}</a>
+    {% endfor %}
+  </div>
+</div>
+<div class="tarjeta">
+  <h2 style="margin-top:0">Últimas cargas de archivos</h2>
+  <div class="tabla-scroll"><table class="datos">
+    <tr><th>Fecha</th><th>Archivo</th><th>Tipo</th><th>Cargados</th><th>Rechazados</th><th>Usuario</th></tr>
+    {% for x in cargas %}
+    <tr><td>{{ x.Fecha_Hora|valor }}</td><td><a href="{{ url_for('carga_detalle', id_carga=x.ID_Carga) }}">{{ x.Nombre_Archivo }}</a></td>
+        <td>{{ x.Tipo_Archivo }}</td><td>{{ x.Registros_Cargados }}</td><td>{{ x.Registros_Rechazados }}</td><td>{{ x.Username or '-' }}</td></tr>
+    {% else %}<tr><td colspan="6">Aún no hay cargas.</td></tr>{% endfor %}
+  </table></div>
+</div>
+{% endblock %}

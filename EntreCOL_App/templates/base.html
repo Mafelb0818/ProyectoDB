@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}EntreCOL+{% endblock %} - Sistema de Información</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+</head>
+<body>
+<div class="contenedor">
+  <nav class="lateral">
+    <div class="marca">EntreCOL<span>+</span></div>
+    <div class="sub">Sistema de Información · ColPlus-Solutions</div>
+    <h4>General</h4>
+    <a href="{{ url_for('inicio') }}">Inicio</a>
+    <a href="{{ url_for('reportes_inicio') }}">Reportes</a>
+    <a href="{{ url_for('consultas') }}">Consultas dinámicas</a>
+    <a href="{{ url_for('cargas') }}">Carga de archivos</a>
+    {% for grupo, items in menu_entidades.items() %}
+      <h4>{{ grupo }}</h4>
+      {% for clave, titulo in items %}
+        <a href="{{ url_for('crud_lista', clave=clave) }}">{{ titulo }}</a>
+      {% endfor %}
+    {% endfor %}
+    {% if rol == 'Administrador' %}
+      <h4>Seguridad</h4>
+      <a href="{{ url_for('usuarios') }}">Usuarios</a>
+      <a href="{{ url_for('auditoria') }}">Auditoría</a>
+    {% endif %}
+  </nav>
+  <div class="principal">
+    <div class="barra">
+      <div class="usuario">Usuario: <b>{{ usuario_nombre }}</b><span class="etiqueta-rol">{{ rol }}</span></div>
+      <div>
+        <a href="{{ url_for('cambiar_contrasena') }}">Cambiar contraseña</a> &nbsp;|&nbsp;
+        <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+      </div>
+    </div>
+    <div class="contenido">
+      {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% for categoria, texto in mensajes %}<div class="mensaje {{ categoria }}">{{ texto }}</div>{% endfor %}
+      {% endwith %}
+      {% block contenido %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

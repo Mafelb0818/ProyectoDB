@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión - EntreCOL+</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+</head>
+<body>
+<div class="login-fondo">
+  <form class="login-caja" method="post" autocomplete="off">
+    <h1>EntreCOL<span>+</span></h1>
+    <p class="sub">Sistema de Información · Iniciar sesión</p>
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+      {% for categoria, texto in mensajes %}<div class="mensaje {{ categoria }}">{{ texto }}</div>{% endfor %}
+    {% endwith %}
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <div class="campo"><label for="usuario">Usuario</label>
+      <input type="text" id="usuario" name="usuario" value="{{ usuario }}" required autofocus></div>
+    <div class="campo"><label for="contrasena">Contraseña</label>
+      <input type="password" id="contrasena" name="contrasena" required></div>
+    <div class="campo"><label for="captcha">Verificación: escriba el código de la imagen</label>
+      <div class="captcha">
+        <img id="img-captcha" src="{{ url_for('captcha') }}" width="200" height="70" alt="captcha">
+        <button type="button" class="btn sec peq" title="Cambiar imagen"
+          onclick="document.getElementById('img-captcha').src='{{ url_for('captcha') }}?'+Date.now()">&#8635;</button>
+      </div>
+      <input type="text" id="captcha" name="captcha" maxlength="5" required placeholder="Código de 5 caracteres">
+    </div>
+    <button class="btn" style="width:100%">Ingresar</button>
+  </form>
+</div>
+</body>
+</html>

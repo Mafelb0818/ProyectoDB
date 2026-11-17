@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block titulo %}Consultas dinámicas{% endblock %}
+{% block contenido %}
+<h1>Consultas dinámicas</h1>
+<div class="tarjeta">
+  <h2 style="margin-top:0">Constructor de consultas</h2>
+  <p class="nota">Escoja una tabla, las columnas, un filtro opcional y el orden. La aplicación arma la consulta SQL por usted.</p>
+  <form method="post" id="form-constructor">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="modo" value="constructor">
+    <div class="fila" style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="campo"><label>Tabla</label>
+        <select name="tabla" id="tabla" onchange="pintarColumnas()">
+          {% for t in columnas_por_tabla %}<option value="{{ t }}" {% if f.get('tabla') == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select></div>
+      <div class="campo"><label>Límite de filas</label><input type="number" name="limite" min="1" max="5000" value="{{ f.get('limite', 100) }}"></div>
+    </div>
+    <div class="campo"><label>Columnas (si no escoge ninguna se muestran todas)</label><div class="checks" id="columnas"></div></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="campo"><label>Filtrar por</label><select name="filtro_col" id="filtro_col"></select></div>
+      <div class="campo"><label>Condición</label>
+        <select name="operador">{% for op, txt in operadores.items() %}<option value="{{ op }}" {% if f.get('operador') == op %}selected{% endif %}>{{ txt }}</option>{% endfor %}</select></div>
+      <div class="campo"><label>Valor</label><input type="text" name="valor" value="{{ f.get('valor', '') }}"></div>
+      <div class="campo"><label>Ordenar por</label><select name="orden_col" id="orden_col"></select></div>
+      <div class="campo"><label>Dirección</label>
+        <select name="orden_dir"><option value="ASC">Ascendente</option><option value="DESC" {% if f.get('orden_dir') == 'DESC' %}selected{% endif %}>Descendente</option></select></div>
+    </div>
+    <button class="btn" name="accion" value="ver">Ejecutar consulta</button>
+    <button class="btn sec" name="accion" value="pdf" formtarget="_blank">Ver en PDF</button>
+  </form>
+</div>
+
+{% if rol == 'Administrador' %}
+<div class="tarjeta">
+  <h2 style="margin-top:0">SQL libre (solo lectura)</h2>
+  <p class="nota">Solo para administradores. Se permite una sola consulta SELECT y se ejecuta en una transacción de solo lectura.</p>
+  <form method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="modo" value="sql">
+    <textarea name="sql" rows="5" placeholder="SELECT d.Nombre, COUNT(*) FROM Empleado e JOIN Dependencia d ON d.ID_Dependencia = e.ID_Dependencia GROUP BY d.Nombre">{{ f.get('sql', '') }}</textarea>
+    <p><button class="btn" name="accion" value="ver">Ejecutar SQL</button>
+       <button class="btn sec" name="accion" value="pdf" formtarget="_blank">Ver en PDF</button></p>
+  </form>
+</div>
+{% endif %}
+
+{% if resultado %}
+<div class="tarjeta">
+  <h2 style="margin-top:0">Resultado ({{ resultado.filas|length }} filas)</h2>
+  {% if sql %}<pre class="obs">{{ sql }}</pre>{% endif %}
+  <div class="tabla-scroll"><table class="datos">
+    <tr>{% for c in resultado.columnas %}<th>{{ c }}</th>{% endfor %}</tr>
+    {% for fila in resultado.filas[:limite_html] %}
+      <tr>{% for c in resultado.columnas %}<td>{{ fila[c]|valor }}</td>{% endfor %}</tr>
+    {% else %}<tr><td colspan="{{ resultado.columnas|length or 1 }}">Sin resultados.</td></tr>{% endfor %}
+  </table></div>
+  {% if resultado.filas|length > limite_html %}<p class="nota">Se muestran {{ limite_html }} filas en pantalla. Use "Ver en PDF" para ver todas.</p>{% endif %}
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+const COLUMNAS = {{ columnas_por_tabla|tojson }};
+const ELEGIDAS = {{ f.getlist('columnas')|tojson if f.getlist is defined else '[]' }};
+const FILTRO = {{ f.get('filtro_col', '')|tojson }};
+const ORDEN = {{ f.get('orden_col', '')|tojson }};
+function pintarColumnas() {
+  const t = document.getElementById('tabla').value;
+  const cols = COLUMNAS[t] || [];
+  document.getElementById('columnas').innerHTML = cols.map(c =>
+    `<label><input type="checkbox" name="columnas" value="${c}" ${ELEGIDAS.includes(c) ? 'checked' : ''}> ${c}</label>`).join('');
+  const opciones = (sel) => '<option value="">(ninguno)</option>' + cols.map(c => `<option value="${c}" ${c === sel ? 'selected' : ''}>${c}</option>`).join('');
+  document.getElementById('filtro_col').innerHTML = opciones(FILTRO);
+  document.getElementById('orden_col').innerHTML = opciones(ORDEN);
+}
+pintarColumnas();
+</script>
+{% endblock %}

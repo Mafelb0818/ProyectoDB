@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}{{ e.titulo }}{% endblock %}
+{% block contenido %}
+<h1>{{ e.titulo }}</h1>
+<div class="tarjeta">
+  <form class="fila" method="get">
+    <div class="campo"><label>Buscar</label><input type="text" name="q" value="{{ q }}" placeholder="Escriba para buscar..."></div>
+    <div class="campo"><button class="btn sec">Buscar</button></div>
+    {% if q %}<div class="campo"><a class="btn sec" href="{{ url_for('crud_lista', clave=clave) }}">Limpiar</a></div>{% endif %}
+    {% if puede_editar %}<div class="campo" style="margin-left:auto"><a class="btn" href="{{ url_for('crud_form', clave=clave) }}">+ Nuevo</a></div>{% endif %}
+  </form>
+  <p class="nota">{{ total }} registro(s) encontrados.</p>
+  <div class="tabla-scroll"><table class="datos">
+    <tr>{% for col, titulo in e.columnas %}<th>{{ titulo }}</th>{% endfor %}{% if puede_editar %}<th>Acciones</th>{% endif %}</tr>
+    {% for f in filas %}
+    <tr>
+      {% for col, titulo in e.columnas %}<td>{{ f[col]|valor }}</td>{% endfor %}
+      {% if puede_editar %}
+      <td class="acciones">
+        <a class="btn sec peq" href="{{ url_for('crud_form', clave=clave, id_registro=f.id) }}">Editar</a>
+        <form class="en-linea" method="post" action="{{ url_for('crud_eliminar', clave=clave, id_registro=f.id) }}"
+              onsubmit="return confirm('¿Seguro que desea eliminar este registro?');">
+          <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+          <button class="btn rojo peq">Eliminar</button>
+        </form>
+      </td>
+      {% endif %}
+    </tr>
+    {% else %}
+    <tr><td colspan="{{ e.columnas|length + 1 }}">No hay registros.</td></tr>
+    {% endfor %}
+  </table></div>
+  <div class="paginacion">
+    {% if pagina > 1 %}<a class="btn sec peq" href="{{ url_for('crud_lista', clave=clave, q=q, pagina=pagina-1) }}">&laquo; Anterior</a>{% endif %}
+    Página {{ pagina }} de {{ paginas }}
+    {% if pagina < paginas %}<a class="btn sec peq" href="{{ url_for('crud_lista', clave=clave, q=q, pagina=pagina+1) }}">Siguiente &raquo;</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

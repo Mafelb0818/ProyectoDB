@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes{% endblock %}
+{% block contenido %}
+<h1>Reportes</h1>
+<p class="nota">Todos los reportes se pueden ver en pantalla y en vista previa PDF, desde donde se pueden imprimir o descargar.</p>
+<div class="rejilla-reportes">
+  {% for clave, r in reportes.items() %}
+    <a href="{{ url_for('reporte_ver', clave=clave) }}"><b>{{ r.nombre }}</b>{{ r.descripcion }}</a>
+  {% endfor %}
+</div>
+{% endblock %}
